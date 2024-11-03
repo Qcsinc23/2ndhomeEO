@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
+      sourcemap: true,
       rollupOptions: {
         output: {
           manualChunks: undefined
@@ -27,7 +28,7 @@ export default defineConfig(({ mode }) => {
       }
     },
     define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL)
+      'import.meta.env': JSON.stringify(env)
     }
   }
 })
