@@ -4,7 +4,7 @@ const awsConfig: ResourcesConfig = {
     Auth: {
         Cognito: {
             userPoolId: 'us-east-2_2qJVq1bVB',
-            userPoolClientId: 'dmdu4gb883af1',
+            userPoolClientId: 'd3n3i5jooxdsrv',
             signUpVerificationMethod: 'code',
             loginWith: {
                 email: true,
