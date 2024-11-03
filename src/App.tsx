@@ -18,33 +18,41 @@ function App() {
           <div className="app">
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route
-                path="/"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <div className="app-container">
                       <Navigation />
                       <div className="main-content">
-                        <Routes>
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route
-                            path="/care-plan"
-                            element={
-                              <ProtectedRoute requiredGroup="CareProvider">
-                                <CarePlan />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/appointments"
-                            element={
-                              <ProtectedRoute requiredGroup="CareProvider">
-                                <Appointments />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        </Routes>
+                        <Dashboard />
+                      </div>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/care-plan"
+                element={
+                  <ProtectedRoute requiredGroup="CareProvider">
+                    <div className="app-container">
+                      <Navigation />
+                      <div className="main-content">
+                        <CarePlan />
+                      </div>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/appointments"
+                element={
+                  <ProtectedRoute requiredGroup="CareProvider">
+                    <div className="app-container">
+                      <Navigation />
+                      <div className="main-content">
+                        <Appointments />
                       </div>
                     </div>
                   </ProtectedRoute>
