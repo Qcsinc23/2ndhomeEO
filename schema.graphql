@@ -1,0 +1,157 @@
+type Patient @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  dateOfBirth: AWSDate!
+  phoneNumber: String
+  email: String
+  address: String
+  emergencyContact: String
+  carePlans: [CarePlan] @hasMany
+  appointments: [Appointment] @hasMany
+  medicalHistory: [MedicalRecord] @hasMany
+  status: PatientStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CarePlan @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  patientID: ID!
+  patient: Patient @belongsTo
+  title: String!
+  description: String
+  status: CarePlanStatus!
+  startDate: AWSDate!
+  endDate: AWSDate
+  treatments: [Treatment] @hasMany
+  goals: [Goal] @hasMany
+  notes: [Note] @hasMany
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Treatment @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  carePlanID: ID!
+  carePlan: CarePlan @belongsTo
+  name: String!
+  description: String!
+  frequency: String!
+  duration: String
+  notes: String
+  status: TreatmentStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Appointment @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider", "Patient"]}]) {
+  id: ID!
+  patientID: ID!
+  patient: Patient @belongsTo
+  providerID: ID!
+  provider: CareProvider @belongsTo
+  datetime: AWSDateTime!
+  duration: Int!
+  type: AppointmentType!
+  status: AppointmentStatus!
+  notes: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type CareProvider @model @auth(rules: [{allow: groups, groups: ["Admin"]}]) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  title: String!
+  specialization: String
+  email: String!
+  phoneNumber: String
+  appointments: [Appointment] @hasMany
+  status: ProviderStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Goal @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  carePlanID: ID!
+  carePlan: CarePlan @belongsTo
+  description: String!
+  targetDate: AWSDate
+  status: GoalStatus!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type Note @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  carePlanID: ID!
+  carePlan: CarePlan @belongsTo
+  content: String!
+  createdBy: ID!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+type MedicalRecord @model @auth(rules: [{allow: groups, groups: ["Admin", "CareProvider"]}]) {
+  id: ID!
+  patientID: ID!
+  patient: Patient @belongsTo
+  type: String!
+  date: AWSDate!
+  description: String!
+  attachment: String
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+enum CarePlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  PENDING_REVIEW
+}
+
+enum TreatmentStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentType {
+  INITIAL_ASSESSMENT
+  FOLLOW_UP
+  TREATMENT
+  REVIEW
+  EMERGENCY
+}
+
+enum ProviderStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+enum GoalStatus {
+  IN_PROGRESS
+  ACHIEVED
+  CANCELLED
+}
