@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuthenticator } from '@aws-amplify/ui-react';
-import { Amplify } from 'aws-amplify';
+import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 interface AuthUser {
   username: string;
@@ -15,23 +15,6 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
   hasPermission: (group?: string) => boolean;
-}
-
-// Type for Amplify's user object
-interface AmplifyAuthUser {
-  username: string;
-  attributes?: {
-    email?: string;
-    [key: string]: any;
-  };
-  getSignInUserSession?: () => {
-    getAccessToken: () => {
-      payload: {
-        'cognito:groups'?: string[];
-        [key: string]: any;
-      };
-    };
-  };
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -49,50 +32,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { signOut: amplifySignOut, authStatus, user: amplifyUser } = useAuthenticator((context) => [
-    context.authStatus,
-    context.user
-  ]);
-
-  const loadUser = async () => {
-    try {
-      if (authStatus === 'authenticated' && amplifyUser) {
-        const authUser = amplifyUser as AmplifyAuthUser;
-        
-        // Get user groups from the access token
-        const groups = authUser.getSignInUserSession?.()
-          ?.getAccessToken()
-          ?.payload['cognito:groups'] || [];
-
-        // Get user attributes
-        const email = authUser.attributes?.email || '';
-        
-        setUser({
-          username: authUser.username,
-          email,
-          groups: Array.isArray(groups) ? groups : []
-        });
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      setUser(null);
-      if (err instanceof Error) {
-        setError(err);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    loadUser();
-  }, [authStatus, amplifyUser]);
+    const loadUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        const session = await fetchAuthSession();
+        
+        if (currentUser && session.tokens) {
+          const groups = session.tokens.accessToken.payload['cognito:groups'] as string[] || [];
+          
+          setUser({
+            username: currentUser.username,
+            email: currentUser.signInDetails?.loginId || '',
+            groups
+          });
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        setUser(null);
+        setIsAuthenticated(false);
+        if (err instanceof Error) {
+          setError(err);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const signOut = async () => {
+    loadUser();
+  }, []);
+
+  const handleSignOut = async () => {
     try {
-      await amplifySignOut();
+      await signOut();
       setUser(null);
+      setIsAuthenticated(false);
     } catch (err) {
       if (err instanceof Error) {
         setError(err);
@@ -107,14 +86,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isLoading,
-      error,
-      signOut,
-      isAuthenticated: authStatus === 'authenticated',
-      hasPermission
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        error,
+        signOut: handleSignOut,
+        isAuthenticated,
+        hasPermission
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

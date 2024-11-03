@@ -15,7 +15,7 @@ const awsConfig: ResourcesConfig = {
     },
     API: {
         GraphQL: {
-            endpoint: import.meta.env.VITE_API_URL || '',
+            endpoint: 'https://xxxxxxxxxx.appsync-api.us-east-2.amazonaws.com/graphql',
             region: 'us-east-2',
             defaultAuthMode: 'userPool'
         }

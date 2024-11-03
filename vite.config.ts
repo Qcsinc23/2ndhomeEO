@@ -28,7 +28,13 @@ export default defineConfig(({ mode }) => {
       }
     },
     define: {
-      'import.meta.env': JSON.stringify(env)
+      'global': 'globalThis',
+      'process.env': process.env
+    },
+    resolve: {
+      alias: {
+        './runtimeConfig': './runtimeConfig.browser',
+      }
     }
   }
 })

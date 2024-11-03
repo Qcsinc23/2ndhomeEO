@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Authenticator } from '@aws-amplify/ui-react';
 import { AuthProvider } from './contexts/AuthContext';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -12,57 +11,55 @@ import './App.css';
 
 function App() {
   return (
-    <Authenticator.Provider>
-      <AuthProvider>
-        <Router>
-          <div className="app">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <div className="app-container">
-                      <Navigation />
-                      <div className="main-content">
-                        <Dashboard />
-                      </div>
+    <AuthProvider>
+      <Router>
+        <div className="app">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <div className="app-container">
+                    <Navigation />
+                    <div className="main-content">
+                      <Dashboard />
                     </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/care-plan"
-                element={
-                  <ProtectedRoute requiredGroup="CareProvider">
-                    <div className="app-container">
-                      <Navigation />
-                      <div className="main-content">
-                        <CarePlan />
-                      </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/care-plan"
+              element={
+                <ProtectedRoute requiredGroup="CareProvider">
+                  <div className="app-container">
+                    <Navigation />
+                    <div className="main-content">
+                      <CarePlan />
                     </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/appointments"
-                element={
-                  <ProtectedRoute requiredGroup="CareProvider">
-                    <div className="app-container">
-                      <Navigation />
-                      <div className="main-content">
-                        <Appointments />
-                      </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments"
+              element={
+                <ProtectedRoute requiredGroup="CareProvider">
+                  <div className="app-container">
+                    <Navigation />
+                    <div className="main-content">
+                      <Appointments />
                     </div>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
-    </Authenticator.Provider>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

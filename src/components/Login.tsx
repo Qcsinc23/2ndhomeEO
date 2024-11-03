@@ -1,102 +1,84 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Authenticator,
-  View,
-  Image,
-  Heading,
-  useAuthenticator
-} from '@aws-amplify/ui-react';
+import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { signIn } from 'aws-amplify/auth';
+import { Flex, Heading, Button, TextField, Text, Card } from '@aws-amplify/ui-react';
 import { useAuth } from '../contexts/AuthContext';
-import { flexStyles } from '../styles/customStyles';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { authStatus } = useAuthenticator((context) => [context.authStatus]);
+const Login: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (authStatus === 'authenticated' && user) {
-      navigate('/dashboard');
-    }
-  }, [authStatus, user, navigate]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
 
-  const formFields = {
-    signIn: {
-      username: {
-        placeholder: 'Enter your username',
-        isRequired: true,
-        label: 'Username'
-      },
-      password: {
-        placeholder: 'Enter your password',
-        isRequired: true,
-        label: 'Password'
-      }
-    },
-    signUp: {
-      username: {
-        placeholder: 'Choose a username',
-        isRequired: true,
-        label: 'Username'
-      },
-      password: {
-        placeholder: 'Create a password',
-        isRequired: true,
-        label: 'Password'
-      },
-      confirm_password: {
-        placeholder: 'Confirm your password',
-        isRequired: true,
-        label: 'Confirm Password'
-      },
-      email: {
-        placeholder: 'Enter your email',
-        isRequired: true,
-        label: 'Email'
-      }
-    },
-    resetPassword: {
-      username: {
-        placeholder: 'Enter your username',
-        isRequired: true,
-        label: 'Username'
-      }
-    },
-    confirmResetPassword: {
-      confirmation_code: {
-        placeholder: 'Enter your code',
-        isRequired: true,
-        label: 'Confirmation Code'
-      },
-      password: {
-        placeholder: 'Enter your new password',
-        isRequired: true,
-        label: 'New Password'
-      }
+    try {
+      await signIn({ username, password });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during sign in');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <View {...flexStyles.centerContainer} height="100vh">
-      <View maxWidth="400px" width="90%" padding="medium">
-        <View marginBottom="large" textAlign="center">
-          <Image
-            alt="Logo"
-            src="/logo.png"
-            height="60px"
-            marginBottom="medium"
-          />
-          <Heading level={3}>Care Management System</Heading>
-        </View>
+  if (isLoading) {
+    return (
+      <Flex direction="column" justifyContent="center" alignItems="center">
+        <Text>Loading...</Text>
+      </Flex>
+    );
+  }
 
-        <Authenticator
-          initialState="signIn"
-          formFields={formFields}
-          hideSignUp={true}
-        />
-      </View>
-    </View>
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return (
+    <Flex direction="column" justifyContent="center" alignItems="center">
+      <Card variation="elevated">
+        <form onSubmit={handleSubmit}>
+          <Flex direction="column" gap="1rem">
+            <Heading level={3}>Care Management System</Heading>
+
+            {error && (
+              <Text variation="error">
+                {error}
+              </Text>
+            )}
+
+            <TextField
+              label="Username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+
+            <TextField
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <Button
+              type="submit"
+              variation="primary"
+              isLoading={isSubmitting}
+              loadingText="Signing in..."
+              size="large"
+            >
+              Sign in
+            </Button>
+          </Flex>
+        </form>
+      </Card>
+    </Flex>
   );
 };
 

@@ -1,6 +1,17 @@
 import { useEffect } from 'react';
 import { Collection, Heading, View, Text, Loader, Alert } from '@aws-amplify/ui-react';
 import { useDataSync } from '../hooks/useDataSync';
+import type { Appointment, CarePlan } from '../types/api';
+
+interface DashboardItem {
+  title: string;
+  value: number;
+  description: string;
+}
+
+interface ActivityItem extends Partial<Appointment>, Partial<CarePlan> {
+  updatedAt: string;
+}
 
 const Dashboard = () => {
   const {
@@ -25,11 +36,13 @@ const Dashboard = () => {
     return (
       <View padding="medium">
         <Loader size="large" />
+        <Text>Loading dashboard data...</Text>
       </View>
     );
   }
 
   if (error) {
+    console.error('Dashboard Error:', error);
     return (
       <Alert
         variation="error"
@@ -38,12 +51,13 @@ const Dashboard = () => {
         heading="Error loading dashboard"
       >
         {error.message}
+        <Text>Please check the console for more details.</Text>
       </Alert>
     );
   }
 
-  const activePatients = patients.filter(p => p.status === 'ACTIVE');
-  const todaysAppointments = appointments.filter(a => {
+  const activePatients = patients?.filter(p => p.status === 'ACTIVE') || [];
+  const todaysAppointments = appointments?.filter(a => {
     const appointmentDate = new Date(a.datetime);
     const today = new Date();
     return (
@@ -51,8 +65,30 @@ const Dashboard = () => {
       appointmentDate.getMonth() === today.getMonth() &&
       appointmentDate.getFullYear() === today.getFullYear()
     );
-  });
-  const activeCarePlans = carePlans.filter(cp => cp.status === 'ACTIVE');
+  }) || [];
+  const activeCarePlans = carePlans?.filter(cp => cp.status === 'ACTIVE') || [];
+
+  const dashboardItems: DashboardItem[] = [
+    {
+      title: 'Active Patients',
+      value: activePatients.length,
+      description: 'Currently active patients'
+    },
+    {
+      title: "Today's Appointments",
+      value: todaysAppointments.length,
+      description: 'Scheduled for today'
+    },
+    {
+      title: 'Active Care Plans',
+      value: activeCarePlans.length,
+      description: 'Care plans in progress'
+    }
+  ];
+
+  const recentActivity: ActivityItem[] = [...(appointments || []), ...(carePlans || [])]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5);
 
   return (
     <View padding="medium">
@@ -60,27 +96,11 @@ const Dashboard = () => {
 
       <Collection
         type="grid"
-        items={[
-          {
-            title: 'Active Patients',
-            value: activePatients.length,
-            description: 'Currently active patients'
-          },
-          {
-            title: "Today's Appointments",
-            value: todaysAppointments.length,
-            description: 'Scheduled for today'
-          },
-          {
-            title: 'Active Care Plans',
-            value: activeCarePlans.length,
-            description: 'Care plans in progress'
-          }
-        ]}
+        items={dashboardItems}
         gap="medium"
         templateColumns="1fr 1fr 1fr"
       >
-        {(item) => (
+        {(item: DashboardItem) => (
           <View
             backgroundColor="white"
             padding="medium"
@@ -91,13 +111,11 @@ const Dashboard = () => {
             <Text
               fontSize="xxl"
               fontWeight="bold"
-              color="brand.primary.80"
             >
               {item.value}
             </Text>
             <Text
               fontSize="small"
-              color="neutral.80"
             >
               {item.description}
             </Text>
@@ -109,12 +127,10 @@ const Dashboard = () => {
         <Heading level={2}>Recent Activity</Heading>
         <Collection
           type="list"
-          items={[...appointments, ...carePlans]
-            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-            .slice(0, 5)}
+          items={recentActivity}
           gap="small"
         >
-          {(item) => (
+          {(item: ActivityItem) => (
             <View
               backgroundColor="white"
               padding="medium"
@@ -123,10 +139,10 @@ const Dashboard = () => {
             >
               <Text fontWeight="bold">
                 {'datetime' in item
-                  ? `Appointment: ${new Date(item.datetime).toLocaleString()}`
+                  ? `Appointment: ${new Date(item.datetime!).toLocaleString()}`
                   : `Care Plan: ${item.title}`}
               </Text>
-              <Text fontSize="small" color="neutral.80">
+              <Text fontSize="small">
                 Last updated: {new Date(item.updatedAt).toLocaleString()}
               </Text>
             </View>
