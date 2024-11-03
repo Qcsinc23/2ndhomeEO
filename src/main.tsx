@@ -9,16 +9,7 @@ import config from './aws-exports';
 import { AuthProvider } from './contexts/AuthContext';
 import { Authenticator } from '@aws-amplify/ui-react';
 
-Amplify.configure({
-  Auth: config.Auth,
-  API: {
-    GraphQL: {
-      endpoint: import.meta.env.VITE_API_URL || '',
-      defaultAuthMode: 'userPool',
-      region: 'us-east-2'
-    }
-  }
-});
+Amplify.configure(config);
 
 const theme = createTheme({
   name: 'care-management-theme',
